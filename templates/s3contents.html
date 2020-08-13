@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/style.css">
+    <title>Testing</title>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <!-- Line 1 -->
+        <div class="row">
+          <div id="one" >
+            <h2>S3-Storage File Listings</h2>
+          </div>
+        </div>
+
+        <!-- Line 3 -->
+        <div class="row">
+          <div class="col-md-12">
+            <div>
+                <h3>These are your files:</h3>
+                <p>Click on the filename to download it.</p>
+                <ul>
+                  {% for item in contents %}
+                    <li>
+                      <a href="/download/{{ item.Key }}"> {{ item.Key }} </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+          </div>
+        </div>
+      </div>
+    
+      <footer class="page-footer font-small footer-dark">
+        <!-- <nav class="fixed-bottom font-small"></nav> -->
+          <div class="text-center "> &copy; Copyright Coding Bootcamp 2020 </div>
+        </nav>
+      </footer>
+    
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <!-- <script src="../static/js/app.js"></script> -->
+    
+    
+</body>
+</html>

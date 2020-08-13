@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/css/style.css">
+    <title>Testing</title>
+</head>
+<body>
+
+  <div class="container-fluid text-center">
+    <!-- Line 1 -->
+    <div class="row align-text-center">
+      <div id="one" >
+        <h2>Face Emotion Detection Proto Type</h2>
+      </div>
+    </div>
+    <!-- Line 1.1 -->
+    <div class="row">
+      <div class="col-md-12">
+        <p></p>
+      </div>
+    </div>
+    <!-- Line 1.2 -->
+    <div class="row">
+      <div class="col-md-12">
+        <p></p>
+      </div>
+    </div>
+
+    <!-- Line 2 -->
+    <div class="row">
+      <div class="col-md-6 position-static">
+        <div class="well">
+
+          <form method="POST" action="" enctype="multipart/form-data">
+            <!-- <div class="file-upload-wrapper"> -->
+              <input type="file" id="input-file-now" class="file-upload" name='file'>
+              <input type=submit id="upload" value="Upload">
+            <!-- </div> -->
+          </form>
+          <hr>
+          {% if userimage %}
+            <!-- <img src="{{ url_for('showorig', filename=userimage) }}"> -->
+            <img src="{{ userimage }}">
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <!-- Line 3 -->
+    <div class="row">
+      <div class="col-md-12" id="message">
+        {% for message in get_flashed_messages() %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Line 4 -->
+    <div class="row">
+      <div class="col-md-4" id="predicted_image">
+        <hr>
+        {% for file in user_image %}
+          <img src="{{ predicted_image }}" alt="predicted Image" width="60%" height="auto">
+        {% endfor %}
+      </div>
+    </div>
+
+
+
+
+  </div>
+
+
+
+
+
+
+      
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <footer class="page-footer font-small">
+  <!-- <nav class="fixed-bottom font-small"></nav> -->
+    <div class="text-center"> &copy; Copyright Coding Bootcamp 2020 </div>
+  </footer>
+  
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+  <!-- <script src="../static/js/app.js"></script> -->
+    
+    
+</body>
+</html>
