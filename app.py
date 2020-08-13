@@ -20,38 +20,6 @@ warnings.filterwarnings('ignore')
 logger = logging.Logger('catch_all')
 import secrets
 
-# this group is from load and test notebook
-# from tensorflow.keras.models import load_model
-# import cv2
-# # from google.colab.patches import cv2_imshow
-# from keras.preprocessing import image
-# from keras.preprocessing.image import img_to_array
-# from skimage import io
-# face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-
-# import tensorflow as tf
-
-# import keras
-# from keras.models import Sequential
-# from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
-# from keras.layers import Dense, Activation, Dropout, Flatten
-#
-# from keras.preprocessing import image
-# from keras.layers.convolutional import Conv2D
-# from keras.layers.convolutional import MaxPooling2D
-# from keras.metrics import categorical_accuracy
-# from keras.callbacks import ModelCheckpoint
-# from keras.optimizers import *
-# from keras.layers.normalization import BatchNormalization
-
-
-# # from tensorflow.keras.preprocessing.image import img_to_array
-# # from tensorflow.keras.models import load_model
-# from keras.preprocessing.image import img_to_array
-# # from keras.preprocessing.image import ImageDataGenerator
-
-# from keras.models import model_from_json, load_model
-
 # get os environments settings
 aws_bucket = os.environ.get('AWS_BUCKET')
 print("Bucket: ", aws_bucket)
@@ -169,7 +137,8 @@ def image_prediction(imagefile, fileext):
     import cv2
     print(" setting dependencies...-1")
     # from google.colab.patches import cv2_imshow
-    import tensorflow as tf
+    # import tensorflow as tf
+    import keras
     print(" setting dependencies...0")
     ## from tensorflow import keras
     from keras.preprocessing import image
@@ -181,8 +150,8 @@ def image_prediction(imagefile, fileext):
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     rmodel_path = "models/face_emotion.h5"
     print("Before loading model...")
-    model3 = tf.keras.models.load_model(rmodel_path)
-    # model3 = keras.models.load_model(rmodel_path)
+    # model3 = tf.keras.models.load_model(rmodel_path)
+    model3 = keras.models.load_model(rmodel_path)
     if fileext in ['.jpg', '.png', '.gif']:
         print("Inside image file processing...")
         img = cv2.imread(imagefile,1)     
