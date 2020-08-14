@@ -33,10 +33,11 @@ expression = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 
 # Flask Setup
 app = Flask(__name__)
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
-UPLOAD_FOLDER = "uploads"
-VIDEO_OUT_FOLDER = "uploads/out/"
+UPLOAD_FOLDER = "static/uploads"
+VIDEO_OUT_FOLDER = "static/uploads/out/"
 BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
 
@@ -49,14 +50,18 @@ def home():
     print("Server received request for 'Home' page...")
     # files = os.listdir(app.config['UPLOAD_FOLDER'])
     # return render_template("test.html", files=files)
-    return render_template("test.html")
+    return render_template("index.html")
 
 # uploads a file to S3 bucket
 @app.route("/", methods=['GET', 'POST'])
 def upload():
     print("Server received request for upload page...")
     print("Call inside upload file ", request.method)
+    ofilename = ''
+    presult = ''
     if request.method == "POST":
+        if os.path.isfile(VIDEO_OUT_FOLDER+'predicted_image.jpg'):
+            os.remove(VIDEO_OUT_FOLDER+'predicted_image.jpg')
         f = request.files['file']
         print("Original File:", f.filename)
         filename = secure_filename(f.filename)
@@ -71,29 +76,32 @@ def upload():
                 # abort(400)
             else:
                 f.save(os.path.join(UPLOAD_FOLDER, filename))
-                upload_file(f"uploads/{filename}", filename, BUCKET)
+                upload_file(f"static/uploads/{filename}", filename, BUCKET)
                 print("File uploaded to S3 Bucket and display the image............")
                 # showorig(f"uploads/{filename}")
-                showorig(filename)
+                ofilename = filename
                 print("    ")
                 print("Calling prediction function.....")
-                image_prediction(f"uploads/{filename}", file_ext)
-                print("Finished prediction function.....")
+                pfilename = image_prediction(f"static/uploads/{filename}", file_ext)
+                presult = "predicted_image.jpg"
+                print("Finished prediction function.....", presult)
 
     # return redirect(url_for('home', error=error))
     # return redirect(url_for('home'))
-    return ('', 204)
+    # return ('', 204)
+    return render_template("index.html", userimage = ofilename, predicted_image = presult)
 
-@app.route("/showorig/<filename>")
-def showorig(filename):
-    print("Server received request to place original image to html")
-    full_filename = os.path.join("../uploads/", filename)
-    print(filename)
-    userimage = filename
-    print(userimage, full_filename)
-    return render_template("test.html", userimage = full_filename)
-    # return send_from_directory(UPLOAD_FOLDER, userimage)
-    # return redirect(url_for('showorig', userimage))
+# @app.route("/showorig/<filename>")
+# def showorig(filename):
+#     print("Server received request to place original image to html")
+#     full_filename = os.path.join("static/uploads/", filename)
+#     print(filename)
+#     userimage = filename
+#     print(userimage, full_filename)
+#     # return render_template("test.html", userimage = filename)
+#     # return send_from_directory(UPLOAD_FOLDER, userimage)
+#     # return redirect(url_for('showorig', userimage))
+#     return ('', 204)
 
 # download a file from s3
 @app.route("/download/<filename>", methods=['GET'])
@@ -177,9 +185,10 @@ def image_prediction(imagefile, fileext):
                     m=a[i]
                     ind=i
             print('Expression Prediction:',expression[ind])
-            newimg = cv2.putText(img, expression[ind], (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
+            newimg = cv2.putText(imgg, expression[ind], (x-10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
             cv2.imwrite(VIDEO_OUT_FOLDER+"predicted_image.jpg", newimg)
             results = newimg
+            pfilename = "predicted_image.jpg"
             # f.save(os.path.join(UPLOAD_FOLDER, newimg))
             # upload_file(f"uploads/{newimg}", newimg, BUCKET)
 
@@ -187,6 +196,8 @@ def image_prediction(imagefile, fileext):
     
     else:
         print("Inside video processing...")
+        filename = imagefile
+        pfilename = ''
         cap = cv2.VideoCapture(str(filename)+'')
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         out = cv2.VideoWriter(VIDEO_OUT_FOLDER+str(filename)+'',cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
@@ -232,8 +243,13 @@ def image_prediction(imagefile, fileext):
             # Closes all the frames
             cv2.destroyAllWindows()
             results = VIDEO_OUT_FOLDER+filename
+            print("Video Results:", results)
+            pfilename = results
 
-    return (results)
+    upload_file(f"static/uploads/out/{pfilename}", pfilename, BUCKET)
+    print("File uploaded to S3 Bucket and display the image............")
+
+    return (pfilename)
 
 # To call training (ML) facial emotions page
 @app.route("/train_facialemotions")
