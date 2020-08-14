@@ -36,8 +36,10 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
-UPLOAD_FOLDER = "/app/static/uploads"
-VIDEO_OUT_FOLDER = "/app/static/uploads/out/"
+myroot = os.path.dirname(__file__)
+print("Printing root directory : ", myroot)
+UPLOAD_FOLDER = myroot+"/static/uploads"
+VIDEO_OUT_FOLDER = myroot+"/static/uploads/out/"
 BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
 
