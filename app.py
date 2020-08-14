@@ -36,8 +36,8 @@ app = Flask(__name__)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
-UPLOAD_FOLDER = "static/uploads"
-VIDEO_OUT_FOLDER = "static/uploads/out/"
+UPLOAD_FOLDER = "/app/static/uploads"
+VIDEO_OUT_FOLDER = "/app/static/uploads/out/"
 BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
 
@@ -61,6 +61,7 @@ def upload():
     presult = ''
     if request.method == "POST":
         if os.path.isfile(VIDEO_OUT_FOLDER+'predicted_image.jpg'):
+            print("before removing file from the server.....")
             os.remove(VIDEO_OUT_FOLDER+'predicted_image.jpg')
         f = request.files['file']
         print("Original File:", f.filename)
