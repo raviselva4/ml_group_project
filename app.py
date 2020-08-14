@@ -75,6 +75,8 @@ def upload():
                 flash('Invalid File Extension...')
                 # abort(400)
             else:
+                cwd = os.getcwd()
+                print("Current Working Directory : ", cwd)
                 f.save(os.path.join(UPLOAD_FOLDER, filename))
                 upload_file(f"static/uploads/{filename}", filename, BUCKET)
                 print("File uploaded to S3 Bucket and display the image............")
