@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" type="image" href="https://499ioen9wh92k2blb3elevg9-wpengine.netdna-ssl.com/wp-content/uploads/2019/12/Canva-Facial-Recognition-System-concept..jpg">
+    <title>Facail Emotion Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+        crossorigin="anonymous">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../static/css/style.css">
+
+</head>
+<body class="text-white" style="background-color:black;">
+    
+    <div class="container main-container"> <!-- Master container-->
+
+        <!-- Jumbotron -->
+        <div class="jumbotron text-center" style="background-image: url(https://499ioen9wh92k2blb3elevg9-wpengine.netdna-ssl.com/wp-content/uploads/2019/12/Canva-Facial-Recognition-System-concept..jpg); background-size: 40%; height: 40%;">
+            <h1 id="title"  class="display-4" style="color:#c1440e;font-weight: bold;" >Facial Emotion Detection Prototype</h1>
+            <!-- <a class="btn btn-lg text-white" style="background-color:#c1440e;" href="/data_input" role="button">Enter to Face Expression</a> -->
+        </div>
+
+        <!-- News Section --> <!-- 1st layer container has 2 columns -->
+        <div class="container">
+         
+            <!-- New section divided into two columns -->
+            <div class="row">
+               
+                <!-- Left Image-->
+                <div class="col-lg-6 col-md-6 col-sm-12">
+                    <!-- <h3>Featured Load Video</h3> -->
+                    <form method="POST" action="" enctype="multipart/form-data">
+                        <input type="file" id="input-file-now" class="file-upload" name='file'>
+                        <input type=submit id="upload" value="Upload">
+                    </form>  
+                </div>
+                
+            </div><!-- Row -->
+        </div><!-- Container -->
+
+        <br>
+        <br>
+
+        <!-- AI Performance bottom -->  
+        <!-- <div class="container"> 
+            <div class="row">
+               
+                <div class="col-xs-1 text-center" style="text-align:center;word-break:break-all;">
+                    <h3>AI Performance</h3>
+
+                    <button onclick="getElementById('demo')">RUN</button>
+                        <i class="fa fa-gear fa-spin" style="font-size:48px; color: blue"></i>
+                    <br>
+                </div>
+            </div>
+        </div> -->
+        <!-- Container -->
+
+        <br>
+        <br>
+         <!-- Performance Result -->  
+        <div class="container">
+         
+            <!-- New section with three columns -->
+            <div class="row content">            
+                <div class="col-sm-12 col-md-4 col-lg-4">
+                    <div>
+                        <h4 class="text-center">Original Image</h4>
+                        <hr class="my-0">
+                        <!-- <a href="abc.html"></a> -->
+                        {% if userimage %}
+                            <img src="{{'static/uploads/' + userimage}}" alt="Original Image" width="100%" height="auto"/>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="col-sm-12 col-md-4 col-lg-4">
+                    <h4 class="text-center">Prediction Outcome</h4>
+                    <hr class="my-4">
+                    <!-- <a href="abc.html"></a> -->
+                    <!-- <p>This is prediction outcome image.</p> -->
+                    {% if predicted_image %}
+                        <img src="{{'static/uploads/out/'+ predicted_image}}" alt="predicted Image" width="100%" height="auto">
+                    {% endif %}
+                </div>
+
+                <div class="col-sm-12 col-md-4 col-lg-4">
+                    <h4 class="text-center">Behavior Statistics</h4>
+                    <hr class="my-4">
+                    <a href="abc.html"></a>
+                    <p>The Statistic of expression during the course of recording.</p>
+                </div>
+
+            </div> 
+
+        </div><!-- Container -->
+
+
+        <footer class="page-footer font-small">
+            <div class="text-center"> © 2020 Group 3, Inc. Presented By Ram Shake - Ravi Selva - Travis Le</div>
+        </footer>
+
+    </div> <!-- /.main-container-->
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <br>
+    <br>
+    <br>
+    <br>
+
+</body>
+</html>
+
