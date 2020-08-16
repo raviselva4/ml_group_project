@@ -2,22 +2,22 @@
 
 Purpose of project:
 
-  -To detect human emotion via face recognition and measure behavioural statistics
+  - To detect human emotion via face recognition and measure behavioural statistics using Machine Learning
  
 Team member:
 
-   -Ravi Selva
-   -Ram Sake
-   -Travis Le
+   - Ravi Selva
+   - Ram Sake
+   - Travis Le
    
 Technology enabler: 
 
-  -Tensorflow and Keras
-  -Computer vision (new library)
-  -Python Pandas
-  -Python Matplotlib
-  -HTML/CSS/Website
-  -Amazon AWS (S3)
+  - Tensorflow and Keras
+  - Computer vision (CV2 new library)
+  - Python Pandas
+  - Python Matplotlib
+  - HTML/CSS/Website
+  - Amazon AWS (S3)
   
 Supervised Classification Prediction Models:
  
@@ -28,6 +28,7 @@ Supervised Classification Prediction Models:
 Deployment
 
   - Heroku deployment is done successfully using flask 
-  https://facialemotiondetection.herokuapp.com/
+  
+  - https://facialemotiondetection.herokuapp.com/
 
 
