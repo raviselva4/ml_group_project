@@ -1,2 +1,33 @@
-# ml_group_project
-ML Facial Expression Detection
+## ML Facial Emotion Detection
+
+Purpose of project:
+
+  -To detect human emotion via face recognition and measure behavioural statistics
+ 
+Team member:
+
+   -Ravi Selva
+   -Ram Sake
+   -Travis Le
+   
+Technology enabler: 
+
+  -Tensorflow and Keras
+  -Computer vision (new library)
+  -Python Pandas
+  -Python Matplotlib
+  -HTML/CSS/Website
+  -Amazon AWS (S3)
+  
+Supervised Classification Prediction Models:
+ 
+  - face_emotion.h5 (facial emotion detector - used Convolutional Nerual Network (CNN))
+  - res10_300x300_ssd_iter_140000.caffemodel (for picture augmentation)
+  - mask_detector.model (for facial mask detection - used MobileNetV2)
+
+Deployment
+
+  - Heroku deployment is done successfully using flask 
+  https://facialemotiondetection.herokuapp.com/
+
+
