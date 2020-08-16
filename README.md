@@ -31,4 +31,8 @@ Deployment
   
   - https://facialemotiondetection.herokuapp.com/
 
+Data Sources
+
+  - FER2013 dataset from Kaggle.com (35,887 images)
+  - 4836 images used for mask detection (google search)
 
