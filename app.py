@@ -60,16 +60,17 @@ time.sleep(5)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
-myroot = os.path.dirname(__file__)
+# for local export OS_ROOT = actual path where app.py is located and end with /
+myroot = os.environ.get('OS_ROOT')
+# myroot = os.path.dirname(__file__)
 print("Printing root directory : ", myroot)
 # UPLOAD_FOLDER = myroot+"/static/uploads"
 # OUT_FOLDER = myroot+"/static/uploads/out/"
-UPLOAD_FOLDER = "static/uploads"
-OUT_FOLDER = "static/uploads/out/"
+UPLOAD_FOLDER = myroot+"static/uploads"
+OUT_FOLDER = myroot+"static/uploads/out/"
 simage = 'stats.png'
-webcam_icon = "static/webcam.jpg"
-webcam_icon = myroot+"/"+webcam_icon
-wip_icon = myroot+"/"+"static/wipicon.png"
+webcam_icon = myroot+"static/webcam.jpg"
+wip_icon = myroot+"static/wipicon.png"
 BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
 content = ''
@@ -85,7 +86,7 @@ def home():
     print("Printing webcam directory : ", webcam_icon)
     # files = os.listdir(app.config['UPLOAD_FOLDER'])
     # return render_template("test.html", files=files)
-    return render_template("index.html", webcamicon=webcam_icon)
+    return render_template("index.html", webcamicon=webcam_icon, rootdir = myroot)
 
 # uploads a file to S3 bucket
 @app.route("/", methods=['GET', 'POST'])
@@ -119,21 +120,22 @@ def upload():
                     # abort(400)
                 else:
                     f.save(os.path.join(UPLOAD_FOLDER, filename))
-                    upload_file(f"static/uploads/{filename}", filename, BUCKET)
+                    # uploading to S3 bucket
+                    upload_file(f"{UPLOAD_FOLDER}/{filename}", filename, BUCKET)
                     print("File uploaded to S3 Bucket............")
                     # showorig(f"uploads/{filename}")
                     ofilename = filename
                     print("    ")
                     print("Calling prediction function.....")
-                    pfilename, content = prediction(f"static/uploads/{ofilename}", filename, file_ext)
+                    pfilename, content = prediction(f"{UPLOAD_FOLDER}/{ofilename}", filename, file_ext)
                     # presult = "predicted_image.jpg"
                     if file_ext == '.mp4':
                         simage = ''
                     # verify all are having expected value before hittnig html
                     print("root......  :", myroot)
-                    pfilename = myroot+"/static/uploads/out/"+pfilename
-                    ofilename = myroot+"/static/uploads/"+ofilename
-                    spchart = myroot+"/static/uploads/out/"+simage
+                    pfilename = myroot+"static/uploads/out/"+pfilename
+                    ofilename = myroot+"static/uploads/"+ofilename
+                    spchart = myroot+"static/uploads/out/"+simage
                     print("Finished prediction function.....", pfilename)
                     print("Content   : ", content)
                     print("Extension :", file_ext)
@@ -142,12 +144,12 @@ def upload():
                     print("userimage   : ", ofilename)
                     print("predicted image   : ", pfilename)
         
-            return render_template("index.html", rootdir = myroot+"/", webcamicon=webcam_icon, userimage = ofilename, predicted_image = pfilename, stats_image = simage, spchart=spchart, content=content, wipicon=wip_icon)
+            return render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, userimage = ofilename, predicted_image = pfilename, stats_image = simage, spchart=spchart, content=content, wipicon=wip_icon)
         else:
             call_webcam()
-            render_template("index.html", rootdir = myroot+"/", webcamicon=webcam_icon, wipicon=wip_icon)
+            render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, wipicon=wip_icon)
     else:
-        render_template("index.html", rootdir = myroot+"/", webcamicon=webcam_icon, wipicon=wip_icon)
+        render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, wipicon=wip_icon)
 
 
 # return ('', 204)
@@ -288,7 +290,8 @@ def prediction(imagefile, fname, fileext):
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
         print("Before video writer........ ")
         # out = cv2.VideoWriter(OUT_FOLDER+fname, cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
-        out = cv2.VideoWriter(OUT_FOLDER+fname,cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
+        # out = cv2.VideoWriter(OUT_FOLDER+fname,cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
+        out = cv2.VideoWriter(OUT_FOLDER+"predicted_video.mp4",cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
         print("After Video out and before cap is Opened........ ")
         xval = []
         # if (cap.isOpened() == False):
@@ -355,12 +358,13 @@ def prediction(imagefile, fname, fileext):
         # pltfile = OUT_FOLDER+simage
         # plt.tight_layout()
         # plt.savefig(pltfile)
-        # pfilename = 'predicted_video.mp4'
-        pfilename = fname
+        pfilename = 'predicted_video.mp4'
+        # pfilename = fname
         time.sleep(5)
         print("Video Results:", pfilename, content)
 
     print("Before moving the file to s3........ Filename", pfilename)
+    # takes longer time based on file size to load into S3 bucket...
     # upload_file(f"static/uploads/out/{pfilename}", pfilename, BUCKET)
     print("File uploaded to S3 Bucket and display the image............")
     print("content.......  :  ", content)
@@ -371,7 +375,7 @@ def prediction(imagefile, fname, fileext):
 @app.route("/train_facialemotions")
 def train_facialemotions():
     print("Server received request for 'Train Facial Emotions' page...")
-    filname = "data/fer2013.csv"
+    filname = myroot+"data/fer2013.csv"
     Y = []
     X = []
     first = True
@@ -462,11 +466,11 @@ def train_facialemotions():
     # define epoch
     epochs = 5
     # define the path to store the model
-    checkpoint_path = "models/model_checkpoint_"+str(epochs)+".h5"
-    model_path = "models/facial_expressions_cnn_R"+str(epochs)+".h5"
-    json_path = "models/facial_expressions_cnn_R"+str(epochs)+".json"
+    checkpoint_path = myroot+"models/model_checkpoint_"+str(epochs)+".h5"
+    model_path = myroot+"models/facial_expressions_cnn_R"+str(epochs)+".h5"
+    json_path = myroot+"models/facial_expressions_cnn_R"+str(epochs)+".json"
     print("Before training the model...")
-    h=model.fit(x=X_train,     
+    h=model.fit(x=X_train,
         y=y_train, 
         batch_size=64, 
         epochs=epochs, 
