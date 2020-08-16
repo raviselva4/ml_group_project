@@ -19,6 +19,29 @@ from pprint import pprint
 warnings.filterwarnings('ignore')
 logger = logging.Logger('catch_all')
 import secrets
+import matplotlib
+matplotlib.use('Agg')
+
+# setting the dependencies...
+print("Before setting dependencies...")
+import cv2
+print(" setting dependencies...-1")
+# from google.colab.patches import cv2_imshow
+# import tensorflow as tf
+import keras
+print(" setting dependencies...0")
+## from tensorflow import keras
+from keras.preprocessing import image
+print(" setting dependencies...1")
+from keras.preprocessing.image import img_to_array
+print(" setting dependencies...2")
+from skimage import io
+print(" setting dependencies...3")
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+rmodel_path = "models/face_emotion.h5"
+print("Before loading model...")
+# model3 = tf.keras.models.load_model(rmodel_path)
+model3 = keras.models.load_model(rmodel_path)
 
 # get os environments settings
 aws_bucket = os.environ.get('AWS_BUCKET')
@@ -33,69 +56,101 @@ expression = ['angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral']
 
 # Flask Setup
 app = Flask(__name__)
+time.sleep(5)
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 myroot = os.path.dirname(__file__)
 print("Printing root directory : ", myroot)
-UPLOAD_FOLDER = myroot+"/static/uploads"
-VIDEO_OUT_FOLDER = myroot+"/static/uploads/out/"
+# UPLOAD_FOLDER = myroot+"/static/uploads"
+# OUT_FOLDER = myroot+"/static/uploads/out/"
+UPLOAD_FOLDER = "static/uploads"
+OUT_FOLDER = "static/uploads/out/"
+simage = 'stats.png'
+webcam_icon = "static/webcam.jpg"
+webcam_icon = myroot+"/"+webcam_icon
+wip_icon = myroot+"/"+"static/wipicon.png"
 BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
+content = ''
 
 #################################################
 # Flask Routes
 #################################################
 
-@app.route("/")
+@app.route("/", methods={'GET'})
 def home():
     print("Server received request for 'Home' page...")
+    print("Printing root directory : ", myroot)
+    print("Printing webcam directory : ", webcam_icon)
     # files = os.listdir(app.config['UPLOAD_FOLDER'])
     # return render_template("test.html", files=files)
-    return render_template("index.html")
+    return render_template("index.html", webcamicon=webcam_icon)
 
 # uploads a file to S3 bucket
 @app.route("/", methods=['GET', 'POST'])
 def upload():
     print("Server received request for upload page...")
     print("Call inside upload file ", request.method)
+    print("method value :",  request.form['submit_button'])
     ofilename = ''
     presult = ''
     if request.method == "POST":
-        if os.path.isfile(VIDEO_OUT_FOLDER+'predicted_image.jpg'):
-            print("before removing file from the server.....")
-            os.remove(VIDEO_OUT_FOLDER+'predicted_image.jpg')
-        f = request.files['file']
-        print("Original File:", f.filename)
-        filename = secure_filename(f.filename)
-        print("Destination File Name: ", filename)
-        if filename != '':
-            file_ext = os.path.splitext(filename)[1]
-            if file_ext not in app.config['UPLOAD_EXTENSIONS']:
-                print("Invalid Extension.. skipping the file...")
-                # error = "Invalid File Extension..."
-                # flash(u'Invalid File Extension...', 'error')
-                flash('Invalid File Extension...')
-                # abort(400)
-            else:
-                cwd = os.getcwd()
-                print("Current Working Directory : ", cwd)
-                f.save(os.path.join(UPLOAD_FOLDER, filename))
-                upload_file(f"static/uploads/{filename}", filename, BUCKET)
-                print("File uploaded to S3 Bucket and display the image............")
-                # showorig(f"uploads/{filename}")
-                ofilename = filename
-                print("    ")
-                print("Calling prediction function.....")
-                pfilename = image_prediction(f"static/uploads/{filename}", file_ext)
-                presult = "predicted_image.jpg"
-                print("Finished prediction function.....", presult)
+        if request.form['submit_button'] == 'Upload':
+            if os.path.isfile(OUT_FOLDER+'predicted_image.jpg'):
+                os.remove(OUT_FOLDER+'predicted_image.jpg')
+                os.remove(OUT_FOLDER+'stats.png')
+            if os.path.isfile(OUT_FOLDER+'predicted_video.mp4'):
+                os.remove(OUT_FOLDER+'predicted_video.mp4')
+                # os.remove(OUT_FOLDER+'stats.png')
+            plt.clf()
+            simage = 'stats.png'
+            f = request.files['file']
+            print("Original File:", f.filename)
+            filename = secure_filename(f.filename)
+            print("Destination File Name: ", filename)
+            if filename != '':
+                file_ext = os.path.splitext(filename)[1]
+                if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+                    print("Invalid Extension.. skipping the file...")
+                    # error = "Invalid File Extension..."
+                    # flash(u'Invalid File Extension...', 'error')
+                    flash('Invalid File Extension...')
+                    # abort(400)
+                else:
+                    f.save(os.path.join(UPLOAD_FOLDER, filename))
+                    upload_file(f"static/uploads/{filename}", filename, BUCKET)
+                    print("File uploaded to S3 Bucket............")
+                    # showorig(f"uploads/{filename}")
+                    ofilename = filename
+                    print("    ")
+                    print("Calling prediction function.....")
+                    pfilename, content = prediction(f"static/uploads/{ofilename}", filename, file_ext)
+                    # presult = "predicted_image.jpg"
+                    if file_ext == '.mp4':
+                        simage = ''
+                    # verify all are having expected value before hittnig html
+                    print("root......  :", myroot)
+                    pfilename = myroot+"/static/uploads/out/"+pfilename
+                    ofilename = myroot+"/static/uploads/"+ofilename
+                    spchart = myroot+"/static/uploads/out/"+simage
+                    print("Finished prediction function.....", pfilename)
+                    print("Content   : ", content)
+                    print("Extension :", file_ext)
+                    print("stats :", simage)
+                    print("Webcam   : ", webcam_icon)
+                    print("userimage   : ", ofilename)
+                    print("predicted image   : ", pfilename)
+        
+            return render_template("index.html", rootdir = myroot+"/", webcamicon=webcam_icon, userimage = ofilename, predicted_image = pfilename, stats_image = simage, spchart=spchart, content=content, wipicon=wip_icon)
+        else:
+            call_webcam()
+            render_template("index.html", rootdir = myroot+"/", webcamicon=webcam_icon, wipicon=wip_icon)
+    else:
+        render_template("index.html", rootdir = myroot+"/", webcamicon=webcam_icon, wipicon=wip_icon)
 
-    # return redirect(url_for('home', error=error))
-    # return redirect(url_for('home'))
-    # return ('', 204)
-    return render_template("index.html", userimage = ofilename, predicted_image = presult)
 
+# return ('', 204)
 # @app.route("/showorig/<filename>")
 # def showorig(filename):
 #     print("Server received request to place original image to html")
@@ -107,6 +162,17 @@ def upload():
 #     # return send_from_directory(UPLOAD_FOLDER, userimage)
 #     # return redirect(url_for('showorig', userimage))
 #     return ('', 204)
+
+# activate webcam
+@app.route("/call_webcam", methods=['GET'])
+def call_webcam():
+    print("wip")
+
+    return ('OK', 204)
+
+
+
+
 
 # download a file from s3
 @app.route("/download/<filename>", methods=['GET'])
@@ -142,36 +208,39 @@ def list():
     return render_template('s3contents.html', contents=contents)
 
 # To call image prediction page
-@app.route("/image_prediction/<imagefile>/<fileext>")
-def image_prediction(imagefile, fileext):
-    print("Server received request for 'Image Prediction' page...")
-    # setting the dependencies...
-    print("Before setting dependencies...")
-    import cv2
-    print(" setting dependencies...-1")
-    # from google.colab.patches import cv2_imshow
-    # import tensorflow as tf
-    import keras
-    print(" setting dependencies...0")
-    ## from tensorflow import keras
-    from keras.preprocessing import image
-    print(" setting dependencies...1")
-    from keras.preprocessing.image import img_to_array
-    print(" setting dependencies...2")
-    from skimage import io
-    print(" setting dependencies...3")
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    rmodel_path = "models/face_emotion.h5"
-    print("Before loading model...")
-    # model3 = tf.keras.models.load_model(rmodel_path)
-    model3 = keras.models.load_model(rmodel_path)
+@app.route("/prediction/<imagefile>/<filename>/<fileext>")
+def prediction(imagefile, fname, fileext):
+    print("Server received request for 'Prediction' page...")
+    # # setting the dependencies...
+    # print("Before setting dependencies...")
+    # import cv2
+    # print(" setting dependencies...-1")
+    # # from google.colab.patches import cv2_imshow
+    # # import tensorflow as tf
+    # import keras
+    # print(" setting dependencies...0")
+    # ## from tensorflow import keras
+    # from keras.preprocessing import image
+    # print(" setting dependencies...1")
+    # from keras.preprocessing.image import img_to_array
+    # print(" setting dependencies...2")
+    # from skimage import io
+    # print(" setting dependencies...3")
+    # face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    # rmodel_path = "models/face_emotion_old.h5"
+    # print("Before loading model...")
+    # # model3 = tf.keras.models.load_model(rmodel_path)
+    # model3 = keras.models.load_model(rmodel_path)
+    pfilename = ''
     if fileext in ['.jpg', '.png', '.gif']:
         print("Inside image file processing...")
+        content = 'image'
         img = cv2.imread(imagefile,1)     
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         faces= face_cascade.detectMultiScale(gray, 1.1, 4)
         print("Before for loop model prediction...")
         for (x,y,w,h) in faces:
+            print("Faces xywh:", x,y,w,h)
             imgg=cv2.rectangle(img, (x,y), (x+w, y+h), (255,0,0), 2)
             crop_img = img[y:y+h, x:x+w]
             dsize = (48, 48)
@@ -183,6 +252,18 @@ def image_prediction(imagefile, fileext):
             test /= 255
             custom = model3.predict(test)
             print("Analysing all possible faces:", custom)
+            sortedarray = np.array(custom[0])
+            #  stats plot
+            y_pos = np.arange(len(expression))
+            print(y_pos)
+            plt.bar(y_pos, custom[0], align='center', alpha=0.9)
+            plt.tick_params(axis='x', which='both', pad=10,width=4,length=10)
+            plt.xticks(y_pos, expression)
+            plt.ylabel('percentage')
+            plt.title('emotion')
+            pltfile = OUT_FOLDER+simage
+            plt.tight_layout()
+            plt.savefig(pltfile)
             m=0.000000000000000000001
             a=custom[0]
             for i in range(0,len(a)):
@@ -190,8 +271,8 @@ def image_prediction(imagefile, fileext):
                     m=a[i]
                     ind=i
             print('Expression Prediction:',expression[ind])
-            newimg = cv2.putText(imgg, expression[ind], (x-10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1.5, (0, 0, 255), 2)
-            cv2.imwrite(VIDEO_OUT_FOLDER+"predicted_image.jpg", newimg)
+            newimg = cv2.putText(imgg, expression[ind], (x-10, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.imwrite(OUT_FOLDER+"predicted_image.jpg", newimg)
             results = newimg
             pfilename = "predicted_image.jpg"
             # f.save(os.path.join(UPLOAD_FOLDER, newimg))
@@ -201,60 +282,90 @@ def image_prediction(imagefile, fileext):
     
     else:
         print("Inside video processing...")
-        filename = imagefile
-        pfilename = ''
-        cap = cv2.VideoCapture(str(filename)+'')
+        content = 'video'
+        # filenamewithpath = imagefile
+        cap = cv2.VideoCapture(str(imagefile))
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter(VIDEO_OUT_FOLDER+str(filename)+'',cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
-        if (cap.isOpened() == False):
-            print("Error opening video stream or file")
-            while(True):
-                # Capture frame-by-frame
-                ret, frame = cap.read()
-                if ret == True:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    faces= face_cascade.detectMultiScale(gray, 1.1, 4)
-                    # print(faces)
-                    for (x,y,w,h) in faces:
-                        frame=cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
-                        crop_img = frame[y:y+h, x:x+w]
-                        dsize = (48, 48)
-                        crop_img = cv2.resize(crop_img, dsize)
-                        crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-                        # cv2_imshow(crop_img)
-                        test = image.img_to_array(crop_img)
-                        test = np.expand_dims(test, axis = 0)
-                        test /= 255
-                        custom = model.predict(test)
-                        print("Video analysis :", custom)
-                        m=0.000000000000000000001
-                        a=custom[0]
-                        for i in range(0,len(a)):
-                            if a[i]>m:
-                                m=a[i]
-                                ind=i
-                        print('Video Expression Prediction:',expression[ind])
-                        cv2.putText(frame, objects[ind], (x, y - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 2)
-                        out.write(frame)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-                        # Break the loop
-                else:
-                    break
-                        # When everything done, release the video capture object
-            cap.release()
-            out.release()
-            # Closes all the frames
-            cv2.destroyAllWindows()
-            results = VIDEO_OUT_FOLDER+filename
-            print("Video Results:", results)
-            pfilename = results
+        print("Before video writer........ ")
+        # out = cv2.VideoWriter(OUT_FOLDER+fname, cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
+        out = cv2.VideoWriter(OUT_FOLDER+fname,cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
+        print("After Video out and before cap is Opened........ ")
+        xval = []
+        # if (cap.isOpened() == False):
+        #     print("Error opening video stream or file")
+        while(True):
+            # Capture frame-by-frame
+            print("Before if ret == True")
+            ret, frame = cap.read()
+            if ret == True:
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces= face_cascade.detectMultiScale(gray, 1.1, 4)
+                # print(faces)
+                for (x,y,w,h) in faces:
+                    frame=cv2.rectangle(frame, (x,y), (x+w, y+h), (255,0,0), 2)
+                    crop_img = frame[y:y+h, x:x+w]
+                    dsize = (48, 48)
+                    crop_img = cv2.resize(crop_img, dsize)
+                    crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
+                    print("Inside faces for loop...... ")
+                    # cv2_imshow(crop_img)
+                    test = image.img_to_array(crop_img)
+                    test = np.expand_dims(test, axis = 0)
+                    test /= 255
+                    custom = model3.predict(test)
+                    print("Video analysis :", custom)
+                    m=0.000000000000000000001
+                    a=custom[0]
+                    print(a)
+                    # data = [row.split('\t') for row in a]
+                    # data = np.array(data, dtype='float')
+                    # xval.append(data)
+                    print("Inside faces for loop. before for loop..... ")
+                    for i in range(0,len(a)):
+                        if a[i]>m:
+                            m=a[i]
+                            ind=i
+                    print('Video Expression Prediction:',expression[ind])
+                    cv2.putText(frame, expression[ind], (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    print("Before write loop...... ")
+                    out.write(frame)
+            else:
+                break
+                # key = cv2.waitKey(1) & 0xFF
+                # # if the `q` key was pressed, break from the loop
+                # if key == ord("q"):
+                #     break
+                            
+        print("Before cap release........ ")
+        cap.release()
+        out.release()
+        # Closes all the frames
+        cv2.destroyAllWindows()
+        print("After destroy all windows ........ ")
+        # print("Plot values :", xval)
+        # #  stats plot
+        # y_pos = np.arange(len(expression))
+        # print(y_pos)
+        # plt.bar(y_pos, xval, align='center', alpha=0.9)
+        # plt.tick_params(axis='x', which='both', pad=10,width=4,length=10)
+        # plt.xticks(y_pos, expression)
+        # plt.ylabel('percentage')
+        # plt.title('emotion')
+        # pltfile = OUT_FOLDER+simage
+        # plt.tight_layout()
+        # plt.savefig(pltfile)
+        # pfilename = 'predicted_video.mp4'
+        pfilename = fname
+        time.sleep(5)
+        print("Video Results:", pfilename, content)
 
-    upload_file(f"static/uploads/out/{pfilename}", pfilename, BUCKET)
+    print("Before moving the file to s3........ Filename", pfilename)
+    # upload_file(f"static/uploads/out/{pfilename}", pfilename, BUCKET)
     print("File uploaded to S3 Bucket and display the image............")
+    print("content.......  :  ", content)
 
-    return (pfilename)
+    return (pfilename, content)
 
 # To call training (ML) facial emotions page
 @app.route("/train_facialemotions")
@@ -377,4 +488,5 @@ def train_facialemotions():
 
 #
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run(host='0.0.0.0')
