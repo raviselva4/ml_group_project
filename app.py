@@ -61,7 +61,8 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 # for local export OS_ROOT = actual path where app.py is located and end with /
-myroot = os.environ.get('OS_ROOT')
+# myroot = os.environ.get('OS_ROOT')
+myroot = ''
 # myroot = os.path.dirname(__file__)
 print("Printing root directory : ", myroot)
 # UPLOAD_FOLDER = myroot+"/static/uploads"
