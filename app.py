@@ -69,7 +69,9 @@ print("Printing root directory : ", myroot)
 UPLOAD_FOLDER = myroot+"static/uploads"
 OUT_FOLDER = myroot+"static/uploads/out/"
 simage = 'stats.png'
-webcam_icon = myroot+"static/webcam.jpg"
+# webcam_icon = myroot+"static/webcam.jpg"
+# changing back to relative path
+webcam_icon = "static/webcam.jpg"
 wip_icon = myroot+"static/wipicon.png"
 BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
