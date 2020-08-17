@@ -1,0 +1,8 @@
+# files/folders to ignore for slug compilation
+*.pdf
+/notebooks
+/__pycache__
+/models/mask_detector.model
+/static/deploy.prototxt
+/static/res10_300x300_ssd_iter_140000.caffemodel
+*.mp4
