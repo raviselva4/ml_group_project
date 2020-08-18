@@ -290,11 +290,17 @@ def prediction(imagefile, fname, fileext):
         content = 'video'
         # filenamewithpath = imagefile
         cap = cv2.VideoCapture(str(imagefile))
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        size = (
+            int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
+        )
+        frame_count = int(cap.get(cv2.CAP_PROP_FPS))
+        print("Frame Properties:", frame_count, size)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         print("Before video writer........ ")
         # out = cv2.VideoWriter(OUT_FOLDER+fname, cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
         # out = cv2.VideoWriter(OUT_FOLDER+fname,cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
-        out = cv2.VideoWriter(OUT_FOLDER+"predicted_video.mp4",cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
+        out = cv2.VideoWriter(OUT_FOLDER+"predicted_video.mp4", fourcc, frame_count, size)
         print("After Video out and before cap is Opened........ ")
         xval = []
         # if (cap.isOpened() == False):
