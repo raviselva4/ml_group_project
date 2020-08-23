@@ -123,17 +123,18 @@ def upload():
                     # abort(400)
                 else:
                     f.save(os.path.join(UPLOAD_FOLDER, filename))
-                    # uploading to S3 bucket
-                    upload_file(f"{UPLOAD_FOLDER}/{filename}", filename, BUCKET)
-                    print("File uploaded to S3 Bucket............")
+                    if file_ext == '.mp4':
+                        simage = ''
+                    else:
+                        # uploading to S3 bucket
+                        upload_file(f"{UPLOAD_FOLDER}/{filename}", filename, BUCKET)
+                        print("File uploaded to S3 Bucket............")
                     # showorig(f"uploads/{filename}")
                     ofilename = filename
                     print("    ")
                     print("Calling prediction function.....")
                     pfilename, content = prediction(f"{UPLOAD_FOLDER}/{ofilename}", filename, file_ext)
                     # presult = "predicted_image.jpg"
-                    if file_ext == '.mp4':
-                        simage = ''
                     # verify all are having expected value before hittnig html
                     print("root......  :", myroot)
                     pfilename = myroot+"static/uploads/out/"+pfilename
@@ -176,9 +177,6 @@ def call_webcam():
     return ('OK', 204)
 
 
-
-
-
 # download a file from s3
 @app.route("/download/<filename>", methods=['GET'])
 def download(filename):
@@ -216,26 +214,6 @@ def list():
 @app.route("/prediction/<imagefile>/<filename>/<fileext>")
 def prediction(imagefile, fname, fileext):
     print("Server received request for 'Prediction' page...")
-    # # setting the dependencies...
-    # print("Before setting dependencies...")
-    # import cv2
-    # print(" setting dependencies...-1")
-    # # from google.colab.patches import cv2_imshow
-    # # import tensorflow as tf
-    # import keras
-    # print(" setting dependencies...0")
-    # ## from tensorflow import keras
-    # from keras.preprocessing import image
-    # print(" setting dependencies...1")
-    # from keras.preprocessing.image import img_to_array
-    # print(" setting dependencies...2")
-    # from skimage import io
-    # print(" setting dependencies...3")
-    # face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    # rmodel_path = "models/face_emotion_old.h5"
-    # print("Before loading model...")
-    # # model3 = tf.keras.models.load_model(rmodel_path)
-    # model3 = keras.models.load_model(rmodel_path)
     pfilename = ''
     if fileext in ['.jpg', '.png', '.gif']:
         print("Inside image file processing...")
@@ -296,7 +274,7 @@ def prediction(imagefile, fname, fileext):
         )
         frame_count = int(cap.get(cv2.CAP_PROP_FPS))
         print("Frame Properties:", frame_count, size)
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        fourcc = cv2.VideoWriter_fourcc(*'H264')
         print("Before video writer........ ")
         # out = cv2.VideoWriter(OUT_FOLDER+fname, cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
         # out = cv2.VideoWriter(OUT_FOLDER+fname,cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
