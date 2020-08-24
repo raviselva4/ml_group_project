@@ -14,7 +14,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <!-- <link rel="stylesheet" href="{{ rootdir }}static/css/style.css"> -->
-    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="static/css/style.css">
 
 </head>
 <body class="text-white" style="background-color:black;">
@@ -27,10 +27,9 @@
             <!-- <a class="btn btn-lg text-white" style="background-color:#c1440e;" href="/data_input" role="button">Enter to Face Expression</a> -->
         </div>
 
-        <!-- News Section --> <!-- 1st layer container has 2 columns -->
+        <!-- News Section --> <!-- 1st layer container -->
         <div class="container">
-         
-            <!-- New section divided into two columns -->
+
             <div class="row">
                
                 <!-- Left Image-->
@@ -40,15 +39,21 @@
                         <input type="file" id="input-file-now" class="file-upload" name='file'>
                         <input type=submit id="upload" name= "submit_button" value="Upload">
                             &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
-                        <img src="{{ webcamicon }}" alt="webcamicon" width="5%" height="5%">
+                        <img src="{{ fedcontent.webcamicon }}" alt="webcamicon" width="5%" height="5%">
                         <input type=submit id="webcam" name= "submit_button" value="Live Mask Detection">
                     <!-- </form>  
                     <form method="GET" action="" enctype="multipart/form-data">
                         <input type=submit id="webcam" value="Mask">
                     </form>  -->
-                </div>
-                
+                </div>    
             </div><!-- Row -->
+            <div class="row">
+
+                {% if error %}  
+                <p style="text-align: center; color: orange;"><strong>&nbsp; &nbsp; Error</strong>: {{error}}</p>  
+                {% endif %}  
+  
+            </div>
         </div><!-- Container -->
 
         <br>
@@ -81,15 +86,16 @@
                         <h4 class="text-center">Original Image/Video</h4>
                         <hr class="my-4">
                         <!-- <a href="abc.html"></a> -->
-                        {% if content == 'image' %}
-                        {% if userimage %}
-                            <img src="{{userimage}}" alt="Original Image" width="100%" height="auto"/>
+                        {% if fedcontent.content == 'image' %}
+                        {% if fedcontent.userimage %}
+                            <img src="{{fedcontent.ocontent_s3file}}" alt="Original Image" width="100%" height="auto"/>
+                            <!-- <a href="{{fedcontent.ocontent_s3file}}" alt="Original Image" width="100%" height="auto"></a> -->
                         {% endif %}
                         {% endif %}
-                        {% if content == 'video'%}
-                        {% if userimage %}
+                        {% if fedcontent.content == 'video'%}
+                        {% if fedcontent.userimage %}
                             <video width="100%" height="auto" controls>
-                                <source src="{{userimage}}" type="video/mp4">
+                                <source src="{{fedcontent.ocontent_s3file}}" type="video/mp4">
                             </video>
                     {% endif %}
                     {% endif %}
@@ -101,16 +107,16 @@
                     <hr class="my-4">
                     <!-- <a href="abc.html"></a> -->
                     <!-- <p>This is prediction outcome image.</p> -->
-                    {% if content == 'image'%}
-                    {% if predicted_image %}
-                        <img src="{{predicted_image}}" alt="predicted Image" width="100%" height="auto">
+                    {% if fedcontent.content == 'image'%}
+                    {% if fedcontent.predicted_image %}
+                        <img src="{{fedcontent.pcontent_s3file}}" alt="predicted Image" width="100%" height="auto">
                     {% endif %}
                     {% endif %}
-                    {% if content == 'video'%}
-                    {% if predicted_image %}
+                    {% if fedcontent.content == 'video'%}
+                    {% if fedcontent.predicted_image %}
                         <video width="100%" height="auto" controls autoplay>
-                            <source src="{{predicted_image}}" type="video/mp4">
-                            <p>Your browser doesn't support HTML5 video. Here is a <a href="{{predicted_image}}">link to the video</a> instead.</p>
+                            <source src="{{fedcontent.pcontent_s3file}}" type="video/mp4">
+                            <p>Your browser doesn't support HTML5 video. Here is a <a href="{{fedcontent.predicted_image}}">link to the video</a> instead.</p>
                             <!-- <source src="static/uploads/out/predicted_video.mp4" type="video/mp4"> -->
                         </video>
                     {% endif %}
@@ -121,10 +127,10 @@
                     <h4 class="text-center">Behavior Statistics</h4>
                     <hr class="my-4">
                     <!-- <a href="abc.html"></a> -->
-                    {% if stats_image %}
-                        <img src="{{spchart}}" alt="stats Image" width="100%" height="80%">
-                    {% elif wipicon %}
-                        <img src="{{wipicon}}" alt="stats Image" width="80%" height="50%">
+                    {% if fedcontent.spchart %}
+                        <img src="{{fedcontent.spchart}}" alt="stats Image" width="100%" height="80%">
+                    {% elif fedcontent.content == 'video' %}
+                        <img src="{{fedcontent.wipicon}}" alt="stats Image" width="80%" height="50%">
                     {% endif %}
                 </div>
 

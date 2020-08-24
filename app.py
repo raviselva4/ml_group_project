@@ -14,7 +14,6 @@ from dateutil.relativedelta import relativedelta
 from flask import Flask, render_template, jsonify, request
 from flask import redirect, send_file, url_for, flash, send_from_directory
 from werkzeug.utils import secure_filename
-from sthreefiles import download_file, upload_file, list_files
 from pprint import pprint
 warnings.filterwarnings('ignore')
 logger = logging.Logger('catch_all')
@@ -44,8 +43,9 @@ print("Before loading model...")
 model3 = keras.models.load_model(rmodel_path)
 
 # get os environments settings
-aws_bucket = os.environ.get('AWS_BUCKET')
-print("Bucket: ", aws_bucket)
+# removed S3 access as this is not required for aws server
+# aws_bucket = os.environ.get('AWS_BUCKET')
+# print("Bucket: ", aws_bucket)
 
 # Load the model
 # model_path = "models/facial_expressions_cnn_R158.h5"
@@ -65,18 +65,24 @@ app.secret_key = secret
 myroot = ''
 # myroot = os.path.dirname(__file__)
 print("Printing root directory : ", myroot)
-# UPLOAD_FOLDER = myroot+"/static/uploads"
-# OUT_FOLDER = myroot+"/static/uploads/out/"
+
 UPLOAD_FOLDER = myroot+"static/uploads"
 OUT_FOLDER = myroot+"static/uploads/out/"
 simage = 'stats.png'
-# webcam_icon = myroot+"static/webcam.jpg"
-# changing back to relative path
-webcam_icon = "static/webcam.jpg"
+webcam_icon = myroot+"static/webcam.jpg"
 wip_icon = myroot+"static/wipicon.png"
-BUCKET = aws_bucket
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.mp4']
 content = ''
+filemaxsize = (1024*1024)*20   # 20 Mb
+
+# initialize all variables
+fedcontent = {}
+ofilename = ''
+orig_s3content = ''
+pre_s3content = ''
+pre_s3chart = ''
+content = ''
+pfilename = ''
 
 #################################################
 # Flask Routes
@@ -89,7 +95,18 @@ def home():
     print("Printing webcam directory : ", webcam_icon)
     # files = os.listdir(app.config['UPLOAD_FOLDER'])
     # return render_template("test.html", files=files)
-    return render_template("index.html", webcamicon=webcam_icon, rootdir = myroot)
+    fedcontent = {
+                        "userimage": ofilename,
+                        "ocontent_s3file": orig_s3content,
+                        "predicted_image": pfilename,
+                        "pcontent_s3file": pre_s3content,
+                        "stats_image": simage,
+                        "spchart": pre_s3chart,
+                        "wipicon": wip_icon,
+                        "content": content,
+                        "webcamicon": webcam_icon
+                    }
+    return render_template("index.html", fedcontent=fedcontent)
 
 # uploads a file to S3 bucket
 @app.route("/", methods=['GET', 'POST'])
@@ -97,8 +114,16 @@ def upload():
     print("Server received request for upload page...")
     print("Call inside upload file ", request.method)
     print("method value :",  request.form['submit_button'])
+    error = ''
     ofilename = ''
     presult = ''
+    ofilename = ''
+    orig_s3content = ''
+    pre_s3content = ''
+    pre_s3chart = ''
+    content = ''
+    pfilename = ''
+    simage = ''
     if request.method == "POST":
         if request.form['submit_button'] == 'Upload':
             if os.path.isfile(OUT_FOLDER+'predicted_image.jpg'):
@@ -117,43 +142,61 @@ def upload():
                 file_ext = os.path.splitext(filename)[1]
                 if file_ext not in app.config['UPLOAD_EXTENSIONS']:
                     print("Invalid Extension.. skipping the file...")
-                    # error = "Invalid File Extension..."
+                    error = "Invalid File Extension. Valid extensions are .jpg/.png/.gif/.mp4 "
                     # flash(u'Invalid File Extension...', 'error')
-                    flash('Invalid File Extension...')
+                    # flash('Invalid File Extension...')
                     # abort(400)
                 else:
                     f.save(os.path.join(UPLOAD_FOLDER, filename))
-                    if file_ext == '.mp4':
-                        simage = ''
+                    if os.path.getsize(UPLOAD_FOLDER+'/'+filename) > filemaxsize:
+                        print("File size >than 20 Mb....", os.path.getsize(UPLOAD_FOLDER+'/'+filename))
+                        error = 'File size should be under 20 Mb....'
                     else:
-                        # uploading to S3 bucket
-                        upload_file(f"{UPLOAD_FOLDER}/{filename}", filename, BUCKET)
-                        print("File uploaded to S3 Bucket............")
-                    # showorig(f"uploads/{filename}")
-                    ofilename = filename
-                    print("    ")
-                    print("Calling prediction function.....")
-                    pfilename, content = prediction(f"{UPLOAD_FOLDER}/{ofilename}", filename, file_ext)
-                    # presult = "predicted_image.jpg"
-                    # verify all are having expected value before hittnig html
-                    print("root......  :", myroot)
-                    pfilename = myroot+"static/uploads/out/"+pfilename
-                    ofilename = myroot+"static/uploads/"+ofilename
-                    spchart = myroot+"static/uploads/out/"+simage
-                    print("Finished prediction function.....", pfilename)
-                    print("Content   : ", content)
-                    print("Extension :", file_ext)
-                    print("stats :", simage)
-                    print("Webcam   : ", webcam_icon)
-                    print("userimage   : ", ofilename)
-                    print("predicted image   : ", pfilename)
-        
-            return render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, userimage = ofilename, predicted_image = pfilename, stats_image = simage, spchart=spchart, content=content, wipicon=wip_icon)
+                        if file_ext == '.mp4':
+                            simage = ''
+                        ofilename = filename
+                        print("    ")
+                        print("Calling prediction function.....")
+                        pfilename, content = prediction(f"{UPLOAD_FOLDER}/{ofilename}", filename, file_ext)
+                        # presult = "predicted_image.jpg"
+                        # verify all are having expected value before hittnig html
+                        print("root......  :", myroot)
+                        # reading files from S3 removed due to video upload/download wait time
+                        orig_s3content = UPLOAD_FOLDER+"/"+ofilename
+                        pre_s3content = OUT_FOLDER+pfilename
+                        pre_s3chart = OUT_FOLDER+simage
+                        # build a dict content for html display
+                        print("Finished prediction function.....", pfilename)
+
+            fedcontent = {
+                "userimage": ofilename,
+                "ocontent_s3file": orig_s3content,
+                "predicted_image": pfilename,
+                "pcontent_s3file": pre_s3content,
+                "stats_image": simage,
+                "spchart": pre_s3chart,
+                "wipicon": wip_icon,
+                "content": content,
+                "webcamicon": webcam_icon
+            }
+            print("Content   : ", content)
+            print("Extension :", file_ext)
+            print("stats :", simage)
+            print("Webcam   : ", webcam_icon)
+            print("userimage   : ", ofilename, fedcontent['userimage'])
+            print("predicted image   : ", pfilename, fedcontent['predicted_image'])
+            print(fedcontent)
+            print(fedcontent['ocontent_s3file'])
+            print(fedcontent['pcontent_s3file'])
+            print(fedcontent['spchart'])
+            # return render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, userimage = ofilename, predicted_image = pfilename, 
+            # stats_image = simage, spchart=spchart, content=content, wipicon=wip_icon)
+            return render_template("index.html", fedcontent=fedcontent, error=error)
         else:
             call_webcam()
-            render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, wipicon=wip_icon)
+            render_template("index.html", webcamicon=webcam_icon, wipicon=wip_icon, error=error)
     else:
-        render_template("index.html", rootdir = myroot, webcamicon=webcam_icon, wipicon=wip_icon)
+        render_template("index.html", webcamicon=webcam_icon, wipicon=wip_icon, error=error)
 
 
 # return ('', 204)
@@ -175,40 +218,6 @@ def call_webcam():
     print("wip")
 
     return ('OK', 204)
-
-
-# download a file from s3
-@app.route("/download/<filename>", methods=['GET'])
-def download(filename):
-    print("Server received request for download page...")
-    if request.method == 'GET':
-        print("Get Request and File Name :", filename)
-        print(filename)
-        output = download_file(filename, BUCKET)
-        send_file(output, as_attachment=True)
-
-    return redirect(url_for('home'))
-
-# # download a file from s3 subfolder
-# @app.route("/download/<subfolder>/<filename>", methods=['GET'])
-# def download_sub(subfolder, filename):
-#     print("Server received request for download_sub page...")
-#     if request.method == 'GET':
-#         if filename == '' & subfolder != '':
-#             filename = subfolder
-#             subfolder = ''
-#         print("Get Request and File Name :", filename)
-#         output = download_file(subfolder, filename, BUCKET)
-#         send_file(output, as_attachment=True)
-#
-#     return redirect(url_for('home'))
-
-# list s3 contents
-@app.route("/list")
-def list():
-    print("Server received request for s3 contents list page...")
-    contents = list_files(BUCKET)
-    return render_template('s3contents.html', contents=contents)
 
 # To call image prediction page
 @app.route("/prediction/<imagefile>/<filename>/<fileext>")
@@ -273,11 +282,8 @@ def prediction(imagefile, fname, fileext):
             int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)),
         )
         frame_count = int(cap.get(cv2.CAP_PROP_FPS))
-        print("Frame Properties:", frame_count, size)
         fourcc = cv2.VideoWriter_fourcc(*'H264')
         print("Before video writer........ ")
-        # out = cv2.VideoWriter(OUT_FOLDER+fname, cv2.VideoWriter_fourcc(*'MP4V'), 30, (1280,720))
-        # out = cv2.VideoWriter(OUT_FOLDER+fname,cv2.VideoWriter_fourcc(*'MP4V'), 25, (484, 272))
         out = cv2.VideoWriter(OUT_FOLDER+"predicted_video.mp4", fourcc, frame_count, size)
         print("After Video out and before cap is Opened........ ")
         xval = []
@@ -303,14 +309,14 @@ def prediction(imagefile, fname, fileext):
                     test = np.expand_dims(test, axis = 0)
                     test /= 255
                     custom = model3.predict(test)
-                    print("Video analysis :", custom)
+                    # print("Video analysis :", custom)
                     m=0.000000000000000000001
                     a=custom[0]
                     print(a)
                     # data = [row.split('\t') for row in a]
                     # data = np.array(data, dtype='float')
                     # xval.append(data)
-                    print("Inside faces for loop. before for loop..... ")
+                    # print("Inside faces for loop. before for loop..... ")
                     for i in range(0,len(a)):
                         if a[i]>m:
                             m=a[i]
@@ -320,6 +326,7 @@ def prediction(imagefile, fname, fileext):
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
                     print("Before write loop...... ")
                     out.write(frame)
+                    print("After writing frame...... ")
             else:
                 break
                 # key = cv2.waitKey(1) & 0xFF
@@ -347,13 +354,9 @@ def prediction(imagefile, fname, fileext):
         # plt.savefig(pltfile)
         pfilename = 'predicted_video.mp4'
         # pfilename = fname
-        time.sleep(5)
+        time.sleep(3)
         print("Video Results:", pfilename, content)
 
-    print("Before moving the file to s3........ Filename", pfilename)
-    # takes longer time based on file size to load into S3 bucket...
-    # upload_file(f"static/uploads/out/{pfilename}", pfilename, BUCKET)
-    print("File uploaded to S3 Bucket and display the image............")
     print("content.......  :  ", content)
 
     return (pfilename, content)
@@ -382,20 +385,6 @@ def train_facialemotions():
     print("Before setting the environment ...")
     #  settting required to train the model...
     import tensorflow as tf
-    # from tensorflow.keras.models import Sequential
-    # print("Before setting the environment ...1")
-    # from tensorflow.keras.layers import Dense, Dropout, Conv2D, MaxPool2D, Flatten, BatchNormalization
-    # print("Before setting the environment ...2")
-    # from tensorflow.keras.layers import AveragePooling2D, Activation, MaxPooling2D
-    # print("Before setting the environment ...3")
-    # from tensorflow.keras.preprocessing import image
-    # print("Before setting the environment ...4")
-    # from tensorflow.keras.utils import to_categorical
-    # print("Before setting the environment ...5")
-    # from tensorflow.keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
-    # print("Before setting the environment ...6")
-    # from tensorflow.keras.optimizers import adam
-    # print("Before setting the environment ...7")
 
     # testing again after setting new environment..
     import keras
