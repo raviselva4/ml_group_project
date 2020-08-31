@@ -94,7 +94,7 @@
                         {% endif %}
                         {% if fedcontent.content == 'video'%}
                         {% if fedcontent.userimage %}
-                            <video width="100%" height="auto" controls>
+                            <video width="100%" height="auto" controls autoplay>
                                 <source src="{{fedcontent.ocontent_s3file}}" type="video/mp4">
                             </video>
                     {% endif %}
@@ -134,12 +134,13 @@
                     {% endif %}
                 </div>
 
+
             </div> 
 
         </div><!-- Container -->
 
 
-        <footer class="page-footer font-small">
+        <footer class="page-footer">
             <div class="text-center"> © 2020 Group 3, Inc. Presented By Ram Sake - Ravi Selva - Travis Le</div>
         </footer>
 
@@ -152,12 +153,6 @@
         crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
         crossorigin="anonymous"></script>
-
-    <br>
-    <br>
-    <br>
-    <br>
-
 </body>
 </html>
 

@@ -152,8 +152,6 @@ def upload():
                         print("File size >than 20 Mb....", os.path.getsize(UPLOAD_FOLDER+'/'+filename))
                         error = 'File size should be under 20 Mb....'
                     else:
-                        if file_ext == '.mp4':
-                            simage = ''
                         ofilename = filename
                         print("    ")
                         print("Calling prediction function.....")
@@ -164,7 +162,11 @@ def upload():
                         # reading files from S3 removed due to video upload/download wait time
                         orig_s3content = UPLOAD_FOLDER+"/"+ofilename
                         pre_s3content = OUT_FOLDER+pfilename
-                        pre_s3chart = OUT_FOLDER+simage
+                        if file_ext == '.mp4':
+                            pre_s3chart = wip_icon
+                            simage = wip_icon
+                        else:
+                            pre_s3chart = OUT_FOLDER+simage
                         # build a dict content for html display
                         print("Finished prediction function.....", pfilename)
 
@@ -193,10 +195,38 @@ def upload():
             # stats_image = simage, spchart=spchart, content=content, wipicon=wip_icon)
             return render_template("index.html", fedcontent=fedcontent, error=error)
         else:
-            call_webcam()
-            render_template("index.html", webcamicon=webcam_icon, wipicon=wip_icon, error=error)
+            print("webcam button detected...")
+            # res = call_webcam()
+            # print("after call webcam....", res)
+            error = "Work In Progress....(It works only local delployment...)"
+            simage = wip_icon
+            pre_s3chart = wip_icon
+            fedcontent = {
+                "userimage": ofilename,
+                "ocontent_s3file": orig_s3content,
+                "predicted_image": pfilename,
+                "pcontent_s3file": pre_s3content,
+                "stats_image": simage,
+                "spchart": pre_s3chart,
+                "wipicon": wip_icon,
+                "content": content,
+                "webcamicon": webcam_icon
+            }
+            print(fedcontent)
+            return render_template("index.html", fedcontent=fedcontent, error=error)
     else:
-        render_template("index.html", webcamicon=webcam_icon, wipicon=wip_icon, error=error)
+        fedcontent = {
+                "userimage": ofilename,
+                "ocontent_s3file": orig_s3content,
+                "predicted_image": pfilename,
+                "pcontent_s3file": pre_s3content,
+                "stats_image": simage,
+                "spchart": pre_s3chart,
+                "wipicon": wip_icon,
+                "content": content,
+                "webcamicon": webcam_icon
+            }
+        return render_template("index.html", fedcontent=fedcontent, error=error)
 
 
 # return ('', 204)
@@ -217,7 +247,7 @@ def upload():
 def call_webcam():
     print("wip")
 
-    return ('OK', 204)
+    return ('OK')
 
 # To call image prediction page
 @app.route("/prediction/<imagefile>/<filename>/<fileext>")
