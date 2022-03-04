@@ -163,8 +163,8 @@ def upload():
                         orig_s3content = UPLOAD_FOLDER+"/"+ofilename
                         pre_s3content = OUT_FOLDER+pfilename
                         if file_ext == '.mp4':
-                            pre_s3chart = wip_icon
-                            simage = wip_icon
+                            pre_s3chart = ''
+                            simage = ''
                         else:
                             pre_s3chart = OUT_FOLDER+simage
                         # build a dict content for html display
@@ -198,7 +198,7 @@ def upload():
             print("webcam button detected...")
             # res = call_webcam()
             # print("after call webcam....", res)
-            error = "Work In Progress....(It works only local delployment...)"
+            error = "Work In Progress....(It works only with local delployment...)"
             simage = wip_icon
             pre_s3chart = wip_icon
             fedcontent = {
@@ -321,7 +321,7 @@ def prediction(imagefile, fname, fileext):
         #     print("Error opening video stream or file")
         while(True):
             # Capture frame-by-frame
-            print("Before if ret == True")
+            # print("Before if ret == True")
             ret, frame = cap.read()
             if ret == True:
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -333,7 +333,7 @@ def prediction(imagefile, fname, fileext):
                     dsize = (48, 48)
                     crop_img = cv2.resize(crop_img, dsize)
                     crop_img = cv2.cvtColor(crop_img, cv2.COLOR_BGR2GRAY)
-                    print("Inside faces for loop...... ")
+                    # print("Inside faces for loop...... ")
                     # cv2_imshow(crop_img)
                     test = image.img_to_array(crop_img)
                     test = np.expand_dims(test, axis = 0)
@@ -342,7 +342,7 @@ def prediction(imagefile, fname, fileext):
                     # print("Video analysis :", custom)
                     m=0.000000000000000000001
                     a=custom[0]
-                    print(a)
+                    # print(a)
                     # data = [row.split('\t') for row in a]
                     # data = np.array(data, dtype='float')
                     # xval.append(data)
@@ -354,9 +354,9 @@ def prediction(imagefile, fname, fileext):
                     print('Video Expression Prediction:',expression[ind])
                     cv2.putText(frame, expression[ind], (x, y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    print("Before write loop...... ")
+                    # print("Before write loop...... ")
                     out.write(frame)
-                    print("After writing frame...... ")
+                    # print("After writing frame...... ")
             else:
                 break
                 # key = cv2.waitKey(1) & 0xFF
@@ -385,7 +385,7 @@ def prediction(imagefile, fname, fileext):
         pfilename = 'predicted_video.mp4'
         # pfilename = fname
         time.sleep(3)
-        print("Video Results:", pfilename, content)
+        # print("Video Results:", pfilename, content)
 
     print("content.......  :  ", content)
 
